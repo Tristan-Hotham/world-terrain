@@ -1,0 +1,144 @@
+<!-- wp:paragraph -->
+<p><em>Only 11% of the world's land rises more than 2,000 m above the sea, and only 1.9% of the people in its cities live that high. I made a map of the height of the whole planet, sharp from continents down to valleys, to see how high the world really is and how high we really live.</em></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:buttons -->
+<div class="wp-block-buttons"><!-- wp:button -->
+<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="https://maps.tristanhotham.com/world-terrain/">Explore the interactive version</a></div>
+<!-- /wp:button -->
+<!-- wp:button -->
+<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="https://doi.org/10.5281/zenodo.23848930">Read the paper</a></div>
+<!-- /wp:button --></div>
+<!-- /wp:buttons -->
+
+<!-- wp:paragraph -->
+<p>Height above sea level is one of the first things we learn about a place, and one of the things maps show worst. It decides where snow lies and rivers run, what grows, how hard it is to breathe and where it is easy to build. I wanted a map of it for the whole world that stays sharp whether you look at a continent or a single valley, and that tells you the height of any spot you click.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>The raw material is a remarkable open dataset: the terrain tiles first built by Mapzen and now hosted by Amazon, which stitch together the Space Shuttle's radar survey of the Earth, global elevation models and national surveys from the United States to New Zealand. Each tile is a picture whose colours are a code for height. The interactive map decodes them in your browser as you move, and turns them into colour and shaded relief at every zoom.</p>
+<!-- /wp:paragraph -->
+
+{{IMG|b_world_relief.png|World map in the Equal Earth projection, coloured by height above sea level from green lowlands through cream and tan to brown, mauve and white peaks, with shaded relief: the Himalaya and Tibetan Plateau stand out as a pale mauve block, the Andes as a long ridge, the Rockies, the East African highlands and Greenland's brown ice dome, while most of Africa, Europe, Siberia, Amazonia and Australia are low and green|The world's land by height above sea level, with shaded relief.}}
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Most of the world is low</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>To measure the land I used the same tiles at their coarsest level, a world grid of cells about 9.8 km across, weighting every cell by its true area on the globe. Line up all the land from highest to lowest and you get what geographers call a hypsometric curve. It is surprisingly flat. The average height of the world's land is 807 m, but half of it is below 432 m. Only 26% is more than 1,000 m up, 11% more than 2,000 m and 0.5% more than 5,000 m.</p>
+<!-- /wp:paragraph -->
+
+{{IMG|b_hypsometry.png|Curve of the share of the world's land above each height, falling steeply from 7,000 m and flattening below 1,000 m, with points marking 26 per cent above 1,000 m, 11 per cent above 2,000 m, 5 per cent above 3,000 m and 0.5 per cent above 5,000 m, and a dashed curve without Antarctica lying lower|How much of the world's land is above each height, with and without Antarctica.}}
+
+<!-- wp:paragraph -->
+<p>Much of that high land is ice. Antarctica's ice sheet averages 2,208 m, so without it the rest of the land averages 678 m, and only 6.5% of it is above 2,000 m. And the land itself is a thin crust on a mostly drowned planet: 30% of the Earth's surface is above sea level at all, and the sea floor lies on average 3,713 m down.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">From Tajikistan to the Netherlands</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>By continent, icy Antarctica is highest, then Asia (1,059 m on average), North America (740 m), Africa (629 m), South America (587 m), Europe (370 m) and Oceania (301 m). The highest countries are the mountain states of central Asia, Tajikistan (2,961 m), Bhutan and Kyrgyzstan, with Lesotho in fourth place: even its lowest 10 km cell is 1,454 m up. The lowest is the Netherlands, at 10 m. The United Kingdom averages 158 m.</p>
+<!-- /wp:paragraph -->
+
+{{IMG|b_countries.png|Two bar charts. Left, average height of the land by continent: Antarctica 2,208 m, Asia 1,059, North America 740, Africa 629, South America 587, Europe 370, Oceania 301. Right, the ten highest countries, from Tajikistan at 2,961 m, Bhutan and Kyrgyzstan to Rwanda, and the six lowest, from Denmark at 30 m down to the Netherlands at 10 m|Average height of the land by continent, and the highest and lowest countries.}}
+
+<!-- wp:paragraph -->
+<p>A grid of 10 km smooths the world. The highest cell in it, on the flank of Everest, is 6,727 m, 2,122 m short of the summit, and countries smaller than about a hundred cells, such as Andorra or Liechtenstein, are left out of the ranking.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Mountains, measured twice</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>For the peaks I took every mountain, hill, summit and volcano in Wikidata with a height, 136,410 of them. Wikidata records units, so the 3,057 heights given in feet convert cleanly, but I still checked every height against the terrain around it: a summit can rise well above its surroundings, but not impossibly far. That caught a few wrong units and left 134,657 summits on the map. The highest point of 189 countries matches an independent list.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Height is not the only way to rank a mountain. Prominence asks how far you must descend from a summit before you can climb anything higher. Everest's prominence is its whole height; next come Aconcagua (6,961 m), Denali and Mount Kilimanjaro, then Colombia's Pico Cristóbal Colón, which rises 5,529 m from the Caribbean shore. K2, the second highest mountain on Earth, is only 22nd by prominence.</p>
+<!-- /wp:paragraph -->
+
+{{IMG|b_prominence.png|Bar chart of the fifteen most prominent peaks, each with a pale bar for its height and a dark bar for its prominence: Everest 8,849 m, Aconcagua 6,961, Denali 6,155, Kilimanjaro 5,885, Pico Cristóbal Colón 5,529 and Mount Logan 5,250, down to Mauna Kea 4,205; Nanga Parbat's dark bar is barely half its pale one|The most prominent peaks: height and prominence.}}
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">High land, low people</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Then I set the land against the people. Wikidata gives a height and a population for 4,325 cities of 50,000 or more, home to 2.6 billion people. Half of them live below 92 m. Above 2,000 m lies 11% of the world's land but only 1.9% of these people, 5.7 times fewer.</p>
+<!-- /wp:paragraph -->
+
+{{IMG|b_people_land.png|Paired bars by height band comparing the share of the world's land with the share of people in listed cities: 70 per cent of city people live below 250 m against 32 per cent of the land, and in every band above 1,000 m the bar for land is far longer than the bar for people|Share of the world's land and of city people in each height band.}}
+
+<!-- wp:quote -->
+<blockquote class="wp-block-quote"><!-- wp:paragraph -->
+<p>11% of the world's land is above 2,000 m. 1.9% of its city dwellers are.</p>
+<!-- /wp:paragraph --></blockquote>
+<!-- /wp:quote -->
+
+<!-- wp:paragraph -->
+<p>The exceptions are glorious. Quito, at 2,850 m, is the highest city of a million or more, and Mexico City, Bogotá and Addis Ababa are the biggest above 2,000 m. La Paz is the highest capital at 3,640 m, and its neighbour El Alto stands at 4,150 m. In all, 18 of the listed cities are above 3,000 m.</p>
+<!-- /wp:paragraph -->
+
+{{IMG|b_cities.png|Bar chart of the highest cities of a million or more: Quito 2,850 m, Bogotá 2,582, Addis Ababa 2,355, Arequipa 2,335, Xining, Sanaa and Mexico City 2,240, then Kunming, San Luis Potosí, León, Kabul and Johannesburg|The highest cities of a million or more (Chinese cities by their urban population).}}
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Below the sea</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>A little land lies below sea level, kept dry by deserts or dykes. On the 10 km grid the named depressions add up to 355,893 km², and 76% of that is the plain around the Caspian Sea, where Baku sits 28 m below sea level. Then come Egypt's Qattara Depression, the salt pan of Kati Thanda-Lake Eyre, the polders of the Netherlands and the Afar depression. The Dead Sea shows as a narrow trench reaching 478 m down.</p>
+<!-- /wp:paragraph -->
+
+{{IMG|b_below_sea.png|Four close-up maps with land below sea level in teal: a broad crescent around the northern Caspian Sea, a blob in Egypt's Qattara Depression, a thin strip along the Jordan valley and Dead Sea, and a patchwork of polders across the western Netherlands|Land below sea level on the 10 km grid: the Caspian, Qattara, the Dead Sea and the Netherlands.}}
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">How I did this</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>The statistics use the zoom 4 level of the AWS Terrain Tiles, a 4,096 by 4,096 grid in the Web Mercator projection, with every cell weighted by its true area. Land is Natural Earth's countries less their lakes; coastal cells, which mix land with sea floor, are not allowed below sea level; Antarctica south of 85 degrees comes from ETOPO10; and 13 corrupt cells were repaired. Peaks and cities come from Wikidata, checked against the terrain, with peaks added from Natural Earth and Wikipedia. The interactive map draws the same tiles live at every zoom, with tints, shading, height steps and a readout of any point. The numbers are smoothed to about 10 km, so they understate peaks and valleys and say little about tiny countries; the paper sets out every step and caveat.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:buttons -->
+<div class="wp-block-buttons"><!-- wp:button -->
+<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="https://maps.tristanhotham.com/world-terrain/">Explore the interactive version</a></div>
+<!-- /wp:button -->
+<!-- wp:button -->
+<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="https://doi.org/10.5281/zenodo.23848930">Read the paper</a></div>
+<!-- /wp:button -->
+<!-- wp:button -->
+<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="https://github.com/Tristan-Hotham/world-terrain">Data and code</a></div>
+<!-- /wp:button --></div>
+<!-- /wp:buttons -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">Notes and sources</h3>
+<!-- /wp:heading -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li><a href="https://registry.opendata.aws/terrain-tiles/">AWS Terrain Tiles</a> (Mapzen, Terrarium format), combining SRTM, GMTED2010, ETOPO1, NED and 3DEP, the Canadian DEM, EU-DEM, Geoscience Australia, LINZ, INEGI, OS Terrain 50, ArcticDEM and others; <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md">full sources and terms</a>.</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li>ETOPO10, a 10 arc minute grid derived from NOAA's ETOPO1 (public domain).</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><a href="https://www.wikidata.org/">Wikidata</a> mountains, summits, volcanoes and cities. CC0.</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><a href="https://www.naturalearthdata.com/">Natural Earth</a> countries, lakes, places and elevation points. Public domain.</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li>English Wikipedia, <a href="https://en.wikipedia.org/wiki/List_of_mountain_peaks_by_prominence">List of mountain peaks by prominence</a>. CC BY-SA 4.0.</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li>A peakbagger.com list of national high points, used only as a check.</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li>I wrote the text, with drafting and editing assistance from Claude (Anthropic), which also helped prepare the analysis code. I reviewed and checked all text and results.</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
