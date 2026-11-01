@@ -1,0 +1,33 @@
+MIT License
+
+Copyright (c) 2026 Tristan Hotham
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+This licence covers the code in code/, reddit/collage.py and the page scripts.
+The text of the page, the figures and the derived data in data/ are released
+under CC BY 4.0, except that the prominence values taken from English
+Wikipedia's 'List of mountain peaks by prominence' (in data/peaks.csv, where
+prominence_source is 'wikipedia') are shared under CC BY-SA 4.0. Wikidata is
+CC0 and Natural Earth is public domain. The terrain statistics are derived from
+the AWS Terrain Tiles; see https://github.com/tilezen/joerd/blob/master/docs/attribution.md
+for the terms of each source (some, such as Geoscience Australia and LINZ, ask
+for attribution under CC BY 4.0, and OS Terrain 50 is under the Open Government
+Licence, Crown copyright and database right). The tiles are not redistributed.

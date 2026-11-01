@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>How High Is the World?</title>
+<meta name="description" content="A detailed world map of height above sea level, with shaded relief at every zoom, the world's peaks and cities by height, and how much of the land lies above 500, 1,000, 2,000 and 5,000 m.">
+<meta property="og:title" content="How high is the world? Mountains, plateaus and height above sea level on one map">
+<meta property="og:description" content="Only {{land.above.2000|pct}} of the world's land is above 2,000 m, and only {{cities.share_above.2000|pct1}} of the people in its listed cities live that high. Click anywhere for its height.">
+<meta property="og:image" content="https://maps.tristanhotham.com/world-terrain/header.png">
+<meta property="og:url" content="https://maps.tristanhotham.com/world-terrain/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800;9..144,900&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+/* Survey paper: cream, umber, moss, glacier blue, and the hypsometric tints themselves. */
+:root{
+  --bg:#F6F3EC; --panel:#ECE7DC; --fg:#1F1B17; --muted:#665E55; --rule:#DDD5C6; --card:#FCFAF5; --border:#CBC1AE;
+  --umber:#8A4F2E; --moss:#4E7446; --ice:#33688C; --rust:#B4532A; --sea:#D8E7EF;
+  --display:"Fraunces",Georgia,"Times New Roman",serif;
+  --body:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#14130F; --panel:#1F1D18; --fg:#EEE9E0; --muted:#A9A094; --rule:#353128; --card:#1A1814; --border:#4A4438;
+  --umber:#E0A07A; --moss:#9CC58F; --ice:#8DBEDF; --rust:#EE9468; --sea:#16202A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14130F; --panel:#1F1D18; --fg:#EEE9E0; --muted:#A9A094; --rule:#353128; --card:#1A1814; --border:#4A4438;
+  --umber:#E0A07A; --moss:#9CC58F; --ice:#8DBEDF; --rust:#EE9468; --sea:#16202A; color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 18px/1.62 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));overflow-x:hidden}
+.wrap{max-width:690px;margin:0 auto;padding-block:28px 64px}
+.wrap .bleed{width:min(1180px,calc(100vw - 32px));margin-left:calc((100% - min(1180px,100vw - 32px))/2);margin-right:0}
+a{color:inherit;text-decoration-color:var(--umber);text-underline-offset:3px;overflow-wrap:anywhere}
+.kicker{font:500 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.kicker b{background:var(--umber);color:#fff;padding:5px 8px;font-weight:500}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .kicker b{color:#14130F}}
+:root[data-theme="dark"] .kicker b{color:#14130F}
+header.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px 24px;align-items:end;border-bottom:6px double var(--fg);padding-bottom:22px;margin-top:18px}
+h1{font:900 clamp(46px,11.5vw,100px)/.9 var(--display);letter-spacing:-.02em;margin:0;text-wrap:balance}
+h1 .u{color:var(--umber)} h1 .m{color:var(--moss)}
+.mark{width:clamp(84px,18vw,140px);height:auto;display:block}
+.dek{grid-column:1/-1;font-size:21px;line-height:1.42;margin:8px 0 0;max-width:52ch}
+.byline{font:400 13px/1.4 var(--mono);color:var(--muted);margin-top:14px}
+h2{font:800 34px/1.04 var(--display);letter-spacing:-.01em;margin:54px 0 10px;text-wrap:balance}
+h2 .n{font:500 13px/1 var(--mono);color:var(--umber);display:block;letter-spacing:.1em;margin-bottom:10px}
+h3{font:600 20px/1.25 var(--display);margin:28px 0 6px}
+p{margin:0 0 16px}
+.lede::first-letter{font:900 72px/.8 var(--display);float:left;margin:6px 10px 0 0;color:var(--umber)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin:26px 0 8px}
+.stats div{background:var(--card);padding:14px 12px}
+.stats b{display:block;font:900 clamp(26px,5.6vw,38px)/1 var(--display)}
+.stats b.u{color:var(--umber)} .stats b.m{color:var(--moss)} .stats b.i{color:var(--ice)} .stats b.r{color:var(--rust)}
+.stats span{font:400 12px/1.35 var(--mono);color:var(--muted);display:block;margin-top:6px}
+@media (max-width:600px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.figure{margin:26px 0 30px}
+.fig-h{font:600 19px/1.25 var(--display);margin:0 0 4px}
+.fig-sub{font:400 13px/1.45 var(--mono);color:var(--muted);margin:0 0 12px}
+.src{font:400 12px/1.45 var(--mono);color:var(--muted);margin-top:10px;overflow-wrap:anywhere}
+.chart{width:100%;position:relative}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:640px){.two{grid-template-columns:1fr}}
+svg text{font-family:var(--mono);fill:var(--fg)}
+.lab{font-size:12px}.lab.m{fill:var(--muted)}.lab.b{font-weight:500}.lab.s{font-size:11px}
+.tip{position:absolute;pointer-events:none;background:var(--fg);color:var(--bg);font:400 12px/1.45 var(--mono);padding:8px 10px;border-radius:3px;max-width:280px;z-index:1000;transform:translate(-50%,calc(-100% - 12px));display:none}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px}
+@media (max-width:600px){.controls.scroll{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:thin}.controls.scroll>*{flex:0 0 auto}}
+.btn{font:500 12px/1 var(--mono);background:var(--card);color:var(--fg);border:1px solid var(--border);border-radius:3px;padding:8px 10px;cursor:pointer;min-height:36px;white-space:nowrap}
+.btn[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.btn:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--umber);outline-offset:2px}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:3px;overflow:hidden;max-width:100%}
+.seg .btn{border:0;border-radius:0;border-right:1px solid var(--border)}
+.seg .btn:last-child{border-right:0}
+.searchbox{position:relative;flex:1 1 240px;min-width:0}
+input[type=search]{font:400 15px/1 var(--mono);background:var(--card);color:var(--fg);border:1px solid var(--border);border-radius:3px;padding:10px 11px;min-height:40px;width:100%}
+.suggest{position:absolute;left:0;right:0;top:100%;margin:2px 0 0;padding:0;list-style:none;background:var(--card);border:1px solid var(--border);z-index:1001;font:400 13px/1.3 var(--mono);display:none;max-height:320px;overflow:auto}
+.suggest li{padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--rule)}
+.suggest li span{color:var(--muted)}
+.suggest li[aria-selected="true"],.suggest li:hover{background:var(--panel)}
+.mapgrid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px;align-items:start}
+@media (max-width:900px){.mapgrid{grid-template-columns:1fr}}
+#lmap{height:740px;border:1px solid var(--border);background:#D8E7EF;border-radius:2px}
+@media (max-width:900px){#lmap{height:580px}}
+@media (max-width:600px){#lmap{height:460px}}
+.leaflet-container{font:400 12px/1.4 var(--mono)}
+.leaflet-bar a,.leaflet-bar a:hover{background:var(--card);color:var(--fg);border-bottom-color:var(--border)}
+.leaflet-control-attribution{background:color-mix(in srgb,var(--card) 85%,transparent)!important;color:var(--muted)}
+.leaflet-control-attribution a{color:var(--fg)}
+@media (max-width:600px){.leaflet-control-attribution{font-size:10px;line-height:1.25}}
+.leaflet-popup-content{font:400 12.5px/1.5 var(--mono);margin:12px 14px}
+.leaflet-popup-content b.h{font:700 15px/1.2 var(--display);display:block;margin-bottom:2px}
+.leaflet-popup-content .big{font:800 24px/1.1 var(--display);display:block;margin:4px 0 4px}
+.leaflet-popup-content .mut{color:#6b645b}
+.place{font:500 11px/1 var(--mono);color:#1F1B17;white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff;pointer-events:none}
+.place.s{font-size:10px;font-weight:400}
+.place i{display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;margin-right:4px;vertical-align:1px}
+.place.dk{color:#F4F1EA;text-shadow:0 0 3px #000,0 0 3px #000,0 0 2px #000}
+.pk{font:500 10.5px/1.1 var(--mono);color:#3A2416;white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff;pointer-events:none}
+.pk b{font-weight:500;color:#6b3f22}
+.pk.dk{color:#F4F1EA;text-shadow:0 0 3px #000,0 0 3px #000}.pk.dk b{color:#F2C6A4}
+.lyrBtn{background:var(--card);color:var(--fg);border:1px solid var(--border);border-radius:3px;font:600 12px/1 var(--mono);padding:8px 10px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.lyrBtn[aria-expanded="true"]{background:var(--fg);color:var(--bg)}
+.lyrPanel{background:var(--card);color:var(--fg);border:1px solid var(--border);border-radius:3px;padding:10px 12px 8px;margin-top:6px;width:252px;box-shadow:0 2px 10px rgba(0,0,0,.2);font:400 12px/1.3 var(--mono);max-height:min(72vh,560px);overflow:auto}
+.lyrPanel[hidden]{display:none}
+.lyrPanel .row{display:grid;grid-template-columns:auto 1fr;gap:4px 8px;align-items:center;margin:0 0 9px}
+.lyrPanel label{display:flex;gap:6px;align-items:center;cursor:pointer;font-weight:600}
+.lyrPanel input[type=range]{width:100%;accent-color:var(--fg)}
+.lyrPanel select{font:400 12px var(--mono);background:var(--bg);color:var(--fg);border:1px solid var(--border);border-radius:2px;padding:2px 4px;width:100%}
+.lyrPanel .sub{grid-column:1/-1;display:flex;gap:6px;align-items:center;color:var(--muted);font-size:11px}
+.lyrPanel .sub span{flex:0 0 56px}
+.lyrPanel .hd{font:500 10.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:10px 0 7px;border-top:1px solid var(--rule);padding-top:9px}
+.lyrPanel .reset{font:400 11px var(--mono);color:var(--muted);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}
+@media (max-width:600px){.lyrPanel{width:220px}}
+.pin{width:18px;height:18px;border:3px solid #fff;border-radius:50%;background:transparent;box-shadow:0 0 0 2px #1F1B17}
+.side{background:var(--card);border:1px solid var(--border);padding:14px 14px 10px}
+.side h4{font:500 11px/1.2 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.side h4.t{margin-top:14px;border-top:1px solid var(--rule);padding-top:12px}
+#legend svg,#miniCurve svg{width:100%;height:auto;display:block}
+#readout{font:400 12.5px/1.5 var(--mono);min-height:64px}
+#readout .big{font:800 26px/1.1 var(--display);display:block;margin:2px 0 2px}
+#readout .mut{color:var(--muted)}
+.thr{display:flex;gap:8px;align-items:center;font:500 12px/1.3 var(--mono);margin:6px 0 2px}
+.thr input{flex:1 1 auto;accent-color:var(--umber);min-width:0}
+.thr output{min-width:70px;text-align:right;font:800 16px/1 var(--display)}
+#thrNote{font:400 12px/1.45 var(--mono);color:var(--muted);margin:2px 0 4px}
+.sw{display:inline-block;width:12px;height:12px;vertical-align:-1px;margin-right:6px;border:1px solid rgba(0,0,0,.2)}
+.pull{font:600 26px/1.25 var(--display);border-left:6px solid var(--umber);padding:4px 0 4px 18px;margin:30px 0}
+.note{background:var(--panel);border:1px solid var(--rule);padding:14px 16px;font-size:16px;margin:22px 0}
+.note h3{margin-top:0}
+table.t{width:100%;border-collapse:collapse;font:400 13px/1.35 var(--mono)}
+table.t th{text-align:left;font-weight:500;color:var(--muted);border-bottom:2px solid var(--fg);padding:6px 8px 6px 0;cursor:pointer;white-space:nowrap;position:sticky;top:0;background:var(--bg)}
+table.t td{border-bottom:1px solid var(--rule);padding:7px 8px 7px 0;vertical-align:top}
+table.t td.num,table.t th.num{text-align:right;white-space:nowrap}
+table.t td small{color:var(--muted);display:block}
+table.t tr.go{cursor:pointer}
+table.t tr.go:hover td{background:var(--panel)}
+.tablewrap{overflow-x:auto;max-height:520px;overflow-y:auto;border-bottom:1px solid var(--rule)}
+@media (max-width:600px){table.t .wide{display:none}}
+details{margin:14px 0}
+summary{font:500 13px/1.4 var(--mono);cursor:pointer;color:var(--fg);padding:8px 0}
+.cta{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+.cta a{font:500 13px/1 var(--mono);text-decoration:none;border:1px solid var(--fg);padding:11px 14px;border-radius:3px}
+.cta a.p{background:var(--umber);border-color:var(--umber);color:#fff}
+footer{overflow-wrap:anywhere;border-top:6px double var(--fg);margin-top:56px;padding-top:16px;font:400 13px/1.55 var(--mono);color:var(--muted)}
+footer p{margin:0 0 10px}
+.theme{position:fixed;right:12px;bottom:12px;z-index:1002}
+.loading{font:400 12px/1.4 var(--mono);color:var(--muted)}
+.go2{cursor:pointer;text-decoration:underline;text-decoration-color:var(--border);text-underline-offset:3px}
+@media print{.theme,.controls{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="kicker"><b>Data study</b><span>Terrain</span><span>World, 2026</span></div>
+<header class="hero">
+  <h1>How <span class="u">high</span> is the <span class="m">world</span>?</h1>
+  <svg class="mark" viewBox="0 0 120 120" aria-hidden="true"><g id="heroMark"></g></svg>
+  <p class="dek">A map of height above sea level for the whole planet, sharp from the scale of continents down to single valleys, with the world's peaks and cities coloured by how high they stand. How much of the land is mountain, which countries sit highest, and how high do people really live?</p>
+</header>
+<div class="byline">Dr Tristan Hotham · Independent researcher · 2026 · Data: AWS Terrain Tiles (Mapzen; SRTM, GMTED2010, ETOPO1 and others); Wikidata; Natural Earth; English Wikipedia</div>
+
+<div class="stats">
+  <div><b class="u">{{land.mean|int}} m</b><span>average height of the world's land, Antarctica's ice included; {{noant.mean|int}} m without it</span></div>
+  <div><b class="r">{{land.above.2000|pct}}</b><span>of the land is more than 2,000 m above sea level, most of it in Antarctica and Asia</span></div>
+  <div><b class="m">{{cities.share_above.2000|pct1}}</b><span>of people in the world's listed cities live above 2,000 m; {{cities.share_above.1000|pct}} above 1,000 m</span></div>
+  <div><b class="i">{{below.named|int}}</b><span>km² of land lies below sea level in the depressions the map can see, {{below.caspian_share_named|pct}} of it around the Caspian</span></div>
+</div>
+
+/*INTRO*/
+
+<h2><span class="n">01 · The map</span>Click anywhere for its height</h2>
+<div class="figure bleed" id="atlas">
+  <div class="controls scroll">
+    <div class="seg" role="group" aria-label="Terrain style" id="styleBtns"><button class="btn" data-s="both" aria-pressed="true">Tints and shading</button><button class="btn" data-s="tint" aria-pressed="false">Height tints</button><button class="btn" data-s="shade" aria-pressed="false">Shading only</button><button class="btn" data-s="band" aria-pressed="false">Height steps</button></div>
+    <button class="btn" id="pkBtn" aria-pressed="true">Peaks</button>
+    <button class="btn" id="ctBtn" aria-pressed="false">Cities by height</button>
+  </div>
+  <div class="controls">
+    <div class="searchbox">
+      <input type="search" id="q" placeholder="Search a peak, country or city" aria-label="Search a peak, country or city" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="sug">
+      <ul class="suggest" id="sug" role="listbox"></ul>
+    </div>
+    <div class="seg" role="group" aria-label="Zoom to" id="viewBtns"><button class="btn" data-v="world">World</button><button class="btn" data-v="him">Himalaya</button><button class="btn" data-v="andes">Andes</button><button class="btn" data-v="alps">Alps</button><button class="btn" data-v="uk">Britain</button></div>
+    <span class="loading" id="loadMsg"></span>
+  </div>
+  <div class="mapgrid">
+    <div id="lmap" role="region" aria-label="Map of height above sea level"></div>
+    <div class="side">
+      <h4 id="legTitle">Height above sea level</h4>
+      <div id="legend"></div>
+      <h4 class="t">Height here</h4>
+      <div id="readout">Move over the map, or click or tap anywhere, for its height above sea level.</div>
+      <h4 class="t">How much land is this high?</h4>
+      <div id="miniCurve"></div>
+      <div class="thr"><label for="thr">Grey out land below</label><input type="range" id="thr" min="0" max="6000" step="100" value="0" aria-label="Grey out land below this height"><output id="thrOut" for="thr">off</output></div>
+      <div id="thrNote">Drag to see which land stands above a height.</div>
+    </div>
+  </div>
+  <div class="src">Terrain: AWS Terrain Tiles (Mapzen Terrarium), drawn in your browser at every zoom from SRTM, GMTED2010, ETOPO1 and other sources (see the notes below); heights in metres above mean sea level, tints and shading computed on the fly, vertical exaggeration strongest when zoomed out. Lakes show at their surface or, where the source has it, their floor. Peaks: Wikidata, Natural Earth and Wikipedia, checked against the terrain. Cities: Wikidata. Borders and place names: Natural Earth. Base map and satellite tiles © Esri.</div>
+</div>
+
+/*BODY*/
+
+<div class="cta">
+  <a class="p" href="https://github.com/Tristan-Hotham/world-terrain">Data and code</a>
+  <a href="https://doi.org/10.5281/zenodo.23848930">Paper (Zenodo)</a>
+  <a href="https://blog.tristanhotham.com/2026/10/31/world-terrain/">Blog post</a>
+  <a href="https://blog.tristanhotham.com/">All posts</a>
+</div>
+<footer>
+  <p>Dr Tristan Hotham, Independent researcher. ORCID 0000-0003-4931-9349. Cite as: Hotham, T. (2026) How high is the world? Height above sea level, mountains and where people live, from open terrain data. https://doi.org/10.5281/zenodo.23848930</p>
+  <p>I wrote the text, with drafting and editing assistance from Claude (Anthropic), which also helped prepare the analysis code. I reviewed and checked all text and results.</p>
+  <p>Terrain: AWS Terrain Tiles, Terrarium format (Mapzen, hosted on the Registry of Open Data on AWS). They combine, among others: SRTM (NASA and USGS, public domain); GMTED2010 (USGS and NGA, public domain); ETOPO1 (NOAA, Amante and Eakins 2009, public domain); NED and 3DEP (USGS, public domain); Canadian Digital Elevation Data (Natural Resources Canada, Open Government Licence Canada); EU-DEM (produced using Copernicus data and information funded by the European Union); Digital Elevation Model over Europe; the Australian 5 m DEM (Geoscience Australia, CC BY 4.0); New Zealand's 8 m DEM (LINZ, CC BY 4.0); Mexico's INEGI continental relief; Great Britain's OS Terrain 50 (Ordnance Survey, Open Government Licence, © Crown copyright and database right); ArcticDEM (Polar Geospatial Center, NSF). Full list and terms: github.com/tilezen/joerd/blob/master/docs/attribution.md. Antarctica south of 85° S: ETOPO10, a 10 arc minute grid derived from ETOPO1. Peaks and cities: Wikidata (CC0). Peak supplements: Natural Earth elevation points (public domain) and English Wikipedia, 'List of mountain peaks by prominence' (CC BY-SA 4.0). Countries, lakes and places: Natural Earth (public domain). Base map and satellite tiles © Esri. Map library: Leaflet.</p>
+  <p>Text, figures, code (MIT) and derived data: CC BY 4.0, except the table of most prominent peaks, which follows Wikipedia's CC BY-SA 4.0. Other studies: <a href="https://maps.tristanhotham.com/wind-map/">Where the wind blows</a>, <a href="https://maps.tristanhotham.com/dark-skies/">Darkest skies</a>, <a href="https://blog.tristanhotham.com/">all posts</a>.</p>
+</footer>
+</div>
+<div class="tip" id="tip"></div>
+<button class="btn theme" id="theme" aria-label="Toggle dark mode">◐</button>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const PD = /*PD*/;
+const NS = "http://www.w3.org/2000/svg";
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const el = (t, a = {}, p) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; };
+const fmt = n => n == null || isNaN(n) ? "n/a" : Math.round(n).toLocaleString("en-GB");
+const pc = (x, d = 0) => x == null ? "n/a" : (x * 100).toFixed(d) + "%";
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const tip = document.getElementById("tip");
+function showTip(h, x, y) { tip.innerHTML = h; tip.style.display = "block"; const w = tip.offsetWidth; x = Math.max(w / 2 + 8, Math.min(innerWidth - w / 2 - 8, x)); tip.style.left = x + scrollX + "px"; tip.style.top = y + scrollY + "px"; }
+function hideTip() { tip.style.display = "none"; }
+function hover(node, h) { node.style.cursor = "pointer"; node.setAttribute("tabindex", "0"); const s = () => { const r = node.getBoundingClientRect(); showTip(h, r.left + r.width / 2, r.top); }; node.addEventListener("pointerenter", s); node.addEventListener("pointerleave", hideTip); node.addEventListener("focus", s); node.addEventListener("blur", hideTip); }
+const redraws = [];
+function resp(box, render) { let last = 0; const go = (force) => { const w = Math.max(280, Math.round(box.clientWidth)); if (!force && Math.abs(w - last) < 4) return; last = w; box.innerHTML = ""; render(w, w < 560); }; new ResizeObserver(() => go()).observe(box); go(); redraws.push(() => go(true)); }
+const lbl = (svg, x, y, s, cls = "lab", anchor = "start") => { const t = el("text", { x, y, class: cls, "text-anchor": anchor }, svg); t.textContent = s; return t; };
+const isDark = () => { const r = document.documentElement; return r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; };
+const msg = document.getElementById("loadMsg");
+
+/* ===== the hypsometric palette (metres above sea level) ===== */
+const LAND = [[0, [168, 198, 150]], [100, [186, 208, 158]], [250, [208, 220, 168]], [500, [234, 227, 178]], [1000, [232, 207, 152]], [1500, [216, 180, 128]],
+  [2000, [198, 154, 112]], [3000, [174, 130, 104]], [4000, [156, 126, 122]], [5000, [190, 180, 186]], [6000, [228, 226, 232]], [7000, [250, 250, 252]]];
+const SEA = [[-11000, [104, 142, 186]], [-6000, [134, 172, 208]], [-3000, [160, 195, 223]], [-1000, [182, 211, 231]], [-200, [201, 224, 237]], [0, [216, 233, 241]]];
+const LOWLAND = [112, 158, 138];               // land below sea level
+const BANDS = [0, 100, 250, 500, 1000, 1500, 2000, 3000, 4000, 5000, 6000];
+function ramp(st, v) {
+  if (v <= st[0][0]) return st[0][1]; if (v >= st[st.length - 1][0]) return st[st.length - 1][1];
+  for (let i = 1; i < st.length; i++) if (v <= st[i][0]) { const a = st[i - 1], b = st[i], t = (v - a[0]) / (b[0] - a[0]); return [a[1][0] + (b[1][0] - a[1][0]) * t, a[1][1] + (b[1][1] - a[1][1]) * t, a[1][2] + (b[1][2] - a[1][2]) * t]; }
+}
+const landRGB = h => ramp(LAND, h);
+function bandOf(h) { let k = 0; for (let i = 0; i < BANDS.length; i++) if (h >= BANDS[i]) k = i; return k; }
+const bandRGB = k => landRGB(k < BANDS.length - 1 ? (BANDS[k] + BANDS[k + 1]) / 2 : 6800);
+const rgb = c => `rgb(${Math.round(c[0])},${Math.round(c[1])},${Math.round(c[2])})`;
+const heightCol = h => rgb(h < 0 ? LOWLAND : landRGB(h));
+
+/* hero mark: a mountain cut into height bands, with a peak triangle */
+(() => { const g = document.getElementById("heroMark"); const cl = el("clipPath", { id: "mtn" }, g);
+  el("path", { d: "M2 112 L30 62 L42 74 L66 22 L84 50 L94 40 L118 112 Z" }, cl);
+  const gg = el("g", { "clip-path": "url(#mtn)" }, g); const hs = [0, 250, 500, 1000, 1500, 2000, 3000, 4000, 5000, 6000, 7000];
+  hs.forEach((h, i) => { const y0 = 112 - i * 9.2; el("rect", { x: 0, y: y0 - 9.6, width: 120, height: 9.8, fill: rgb(landRGB(h)) }, gg); });
+  el("path", { d: "M2 112 L30 62 L42 74 L66 22 L84 50 L94 40 L118 112", fill: "none", stroke: "currentColor", "stroke-width": 2.6, "stroke-linejoin": "round" }, g);
+  el("path", { d: "M66 22 L72 32 L66 30 L60 33 Z", fill: "#fff", opacity: .9 }, g);
+  el("line", { x1: 0, x2: 120, y1: 112, y2: 112, stroke: "#33688C", "stroke-width": 3 }, g);
+})();
+
+/* ===== map ===== */
+const TILE = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png";
+const ESRI = "https://server.arcgisonline.com/ArcGIS/rest/services/";
+const LYDEF = { base: "light", style: "both", alpha: 100, relief: 55, sea: true, borders: true, borderK: 40, names: true, nameLvl: 1, peaks: true, peakLvl: 1, cities: false, thr: 0 };
+const LY = { ...LYDEF };
+try { Object.assign(LY, JSON.parse(localStorage.getItem("wt_layers") || "{}")); } catch (e) {}
+LY.thr = 0;
+const saveLY = () => { try { const o = { ...LY }; delete o.thr; localStorage.setItem("wt_layers", JSON.stringify(o)); } catch (e) {} };
+const small = innerWidth < 600;
+const map = L.map("lmap", { minZoom: 1, maxZoom: 15, zoomSnap: .5, worldCopyJump: true, maxBounds: [[-86, -260], [86, 260]], scrollWheelZoom: false }).setView([28, 15], small ? 1 : 2);
+map.on("click", () => map.scrollWheelZoom.enable());
+map.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>');
+[["terrain", 300], ["lines", 420], ["cities", 610], ["peaks", 620], ["names", 640]].forEach(([n, z]) => { map.createPane(n); map.getPane(n).style.zIndex = z; });
+["terrain", "lines", "names"].forEach(n => map.getPane(n).style.pointerEvents = "none");
+let base = null;
+function setBase() {
+  if (base) map.removeLayer(base); base = null;
+  if (LY.base !== "none") base = L.tileLayer(LY.base === "sat" ? ESRI + "World_Imagery/MapServer/tile/{z}/{y}/{x}" : `${ESRI}Canvas/World_${LY.base === "dark" ? "Dark" : "Light"}_Gray_Base/MapServer/tile/{z}/{y}/{x}`, { maxZoom: 16, attribution: "Base map © Esri" }).addTo(map);
+  document.getElementById("lmap").style.background = LY.base === "dark" ? "#1B2026" : "#D8E7EF";
+}
+
+/* the terrain layer: Terrarium tiles decoded in the browser (height = R*256 + G + B/256 - 32768) */
+const H = new Map();          // tile key -> Float32Array of heights
+const MASK = new Map();       // tile key -> Uint8Array land mask (Natural Earth, coast trimmed)
+let BORD = null;
+function landMask(c, size = 256) {
+  const key = c.z + "/" + c.x + "/" + c.y; if (MASK.has(key)) return MASK.get(key); if (!BORD) return null;
+  const cv = document.createElement("canvas"); cv.width = cv.height = size; const x = cv.getContext("2d"); const n = 256 * Math.pow(2, c.z);
+  const P = (lon, lat) => { const s = Math.sin(Math.max(-85.05, Math.min(85.05, lat)) * Math.PI / 180); return [((lon + 180) / 360 * n - c.x * 256) * size / 256, ((0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * n - c.y * 256) * size / 256]; };
+  const b0 = tileBounds(c);
+  x.fillStyle = "#fff"; x.strokeStyle = "#000"; x.beginPath();
+  for (const f of BORD.features) { const bb = f.bbox; if (bb[0] > b0[2] || bb[2] < b0[0] || bb[1] > b0[3] || bb[3] < b0[1]) continue;
+    const polys = f.geometry.type === "Polygon" ? [f.geometry.coordinates] : f.geometry.coordinates;
+    for (const poly of polys) for (const ring of poly) { ring.forEach((p, i) => { const q = P(p[0], p[1]); i ? x.lineTo(q[0], q[1]) : x.moveTo(q[0], q[1]); }); x.closePath(); } }
+  x.fill("evenodd");
+  x.lineWidth = Math.max(2, 3 * Math.pow(2, Math.max(0, c.z - 6))); x.stroke();       // trim the coast, where Natural Earth's line is coarser than the terrain
+  const d = x.getImageData(0, 0, size, size).data, m = new Uint8Array(size * size); for (let i = 0; i < m.length; i++) m[i] = d[i * 4] > 200 && d[i * 4 + 1] > 200 ? 1 : 0;
+  MASK.set(key, m); return m;
+}
+function tileBounds(c) { const n = Math.pow(2, c.z), lon = x => x / n * 360 - 180, lat = y => Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n))) * 180 / Math.PI; return [lon(c.x), lat(c.y + 1), lon(c.x + 1), lat(c.y)]; }
+function decode(img) {
+  const cv = document.createElement("canvas"); cv.width = cv.height = 256; const x = cv.getContext("2d", { willReadFrequently: true }); x.drawImage(img, 0, 0);
+  const d = x.getImageData(0, 0, 256, 256).data, h = new Float32Array(65536);
+  for (let i = 0; i < 65536; i++) h[i] = d[i * 4] * 256 + d[i * 4 + 1] + d[i * 4 + 2] / 256 - 32768;
+  return h;
+}
+function paint(canvas, c) {
+  const key = c.z + "/" + c.x + "/" + c.y, h = H.get(key); if (!h) return;
+  const ctx = canvas.getContext("2d"), img = ctx.createImageData(256, 256), d = img.data;
+  const lat = (tileBounds(c)[1] + tileBounds(c)[3]) / 2, px = 40075016.7 * Math.cos(lat * Math.PI / 180) / (256 * Math.pow(2, c.z));
+  const ex = Math.min(40, Math.max(1, Math.pow(2, (11 - c.z) * .48))) * (.3 + LY.relief / 55 * .7);
+  const st = LY.style, sh = st !== "tint", ti = st !== "shade", band = st === "band", thr = LY.thr, mask = landMask(c);
+  const azm = (360 - 315 + 90) * Math.PI / 180, alt = 45 * Math.PI / 180, ca = Math.cos(alt), sa = Math.sin(alt);
+  const g = (i, j) => h[Math.max(0, Math.min(255, j)) * 256 + Math.max(0, Math.min(255, i))];
+  for (let j = 0; j < 256; j++) for (let i = 0; i < 256; i++) {
+    const q = j * 256 + i, v = h[q], land = v > 0 || (mask ? mask[q] === 1 : false), o = q * 4;
+    let shade = 1;
+    if (sh) {
+      const dzdx = ((g(i + 1, j - 1) + 2 * g(i + 1, j) + g(i + 1, j + 1)) - (g(i - 1, j - 1) + 2 * g(i - 1, j) + g(i - 1, j + 1))) / (8 * px);
+      const dzdy = ((g(i - 1, j + 1) + 2 * g(i, j + 1) + g(i + 1, j + 1)) - (g(i - 1, j - 1) + 2 * g(i, j - 1) + g(i + 1, j - 1))) / (8 * px);
+      const k = land ? ex : ex * .35, sx = dzdx * k, sy = dzdy * k, slope = Math.atan(Math.hypot(sx, sy)), aspect = Math.atan2(sy, -sx);
+      shade = Math.max(0, sa * Math.cos(slope) + ca * Math.sin(slope) * Math.cos(azm - aspect));
+    }
+    let col;
+    if (!land) {
+      if (!LY.sea && st !== "shade") { d[o + 3] = 0; continue; }
+      col = st === "shade" ? [238, 240, 240] : ramp(SEA, v); const f = .82 + .18 * Math.min(1.3, shade / .7);
+      d[o] = col[0] * f; d[o + 1] = col[1] * f; d[o + 2] = col[2] * f; d[o + 3] = 255; continue;
+    }
+    if (!ti) col = [236, 233, 226];
+    else if (v < 0) col = LOWLAND;
+    else if (band) { const k = bandOf(v); col = bandRGB(k); const kr = bandOf(g(i + 1, j)), kd = bandOf(g(i, j + 1)); if (kr !== k || kd !== k) col = [col[0] * .72, col[1] * .72, col[2] * .72]; }
+    else col = landRGB(v);
+    if (thr > 0 && v < thr) { const y = (col[0] * .3 + col[1] * .59 + col[2] * .11); col = [y * .55 + 115, y * .55 + 115, y * .55 + 115]; }
+    let f = 1; if (sh) f = ti ? .5 + .62 * shade : .28 + .86 * shade;
+    d[o] = Math.min(255, col[0] * f); d[o + 1] = Math.min(255, col[1] * f); d[o + 2] = Math.min(255, col[2] * f); d[o + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+const Terrain = L.GridLayer.extend({
+  createTile(c, done) {
+    const t = document.createElement("canvas"); t.width = t.height = 256; const key = c.z + "/" + c.x + "/" + c.y;
+    const n = Math.pow(2, c.z), xx = ((c.x % n) + n) % n; const cc = { z: c.z, x: xx, y: c.y };
+    if (H.has(key)) { paint(t, cc); setTimeout(() => done(null, t), 0); return t; }
+    const img = new Image(); img.crossOrigin = "anonymous";
+    img.onload = () => { try { H.set(key, decode(img)); if (H.size > 600) H.delete(H.keys().next().value); paint(t, cc); done(null, t); } catch (e) { done(e, t); } };
+    img.onerror = () => done(new Error("tile"), t);
+    img.src = TILE.replace("{z}", c.z).replace("{x}", xx).replace("{y}", c.y);
+    return t;
+  }
+});
+const terrain = new Terrain({ pane: "terrain", maxNativeZoom: 14, maxZoom: 15, keepBuffer: 1, attribution: 'Terrain: <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md">AWS Terrain Tiles</a> (SRTM, GMTED2010, ETOPO1 and others)' }).addTo(map);
+function repaint() { for (const k in terrain._tiles) { const t = terrain._tiles[k]; const c = t.coords, n = Math.pow(2, c.z); paint(t.el, { z: c.z, x: ((c.x % n) + n) % n, y: c.y }); } }
+function heightAt(lat, lon, z) {
+  z = Math.max(0, Math.min(14, Math.round(z))); const n = Math.pow(2, z), s = Math.sin(Math.max(-85.05, Math.min(85.05, lat)) * Math.PI / 180);
+  const X = ((lon + 180) / 360 * n) * 256, Y = (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * n * 256;
+  const tx = ((Math.floor(X / 256) % n) + n) % n, ty = Math.floor(Y / 256), h = H.get(z + "/" + tx + "/" + ty); if (!h) return null;
+  const i = Math.min(255, Math.floor(X - Math.floor(X / 256) * 256)), j = Math.min(255, Math.floor(Y - ty * 256)); return h[j * 256 + i];
+}
+async function fetchHeight(lat, lon, z) {
+  let v = heightAt(lat, lon, z); if (v != null) return v;
+  const n = Math.pow(2, z), s = Math.sin(Math.max(-85.05, Math.min(85.05, lat)) * Math.PI / 180);
+  const X = ((lon + 180) / 360 * n), Y = (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * n, tx = ((Math.floor(X) % n) + n) % n, ty = Math.floor(Y);
+  await new Promise(ok => { const img = new Image(); img.crossOrigin = "anonymous"; img.onload = () => { try { H.set(z + "/" + tx + "/" + ty, decode(img)); } catch (e) {} ok(); }; img.onerror = ok; img.src = TILE.replace("{z}", z).replace("{x}", tx).replace("{y}", ty); });
+  return heightAt(lat, lon, z);
+}
+
+/* borders, place names */
+let borderL = L.layerGroup(), nameL = L.layerGroup(), PLACES = null, CTRY = null;
+function pip(lon, lat, ring) { let c = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const a = ring[i], b = ring[j]; if ((a[1] > lat) !== (b[1] > lat) && lon < (b[0] - a[0]) * (lat - a[1]) / (b[1] - a[1]) + a[0]) c = !c; } return c; }
+function countryAt(lon, lat) { if (!BORD) return null; for (const f of BORD.features) { const bb = f.bbox; if (lon < bb[0] || lon > bb[2] || lat < bb[1] || lat > bb[3]) continue; const polys = f.geometry.type === "Polygon" ? [f.geometry.coordinates] : f.geometry.coordinates; for (const p of polys) if (pip(lon, lat, p[0]) && !p.slice(1).some(r => pip(lon, lat, r))) return f.properties; } return null; }
+const darkBase = () => LY.base === "dark" || LY.base === "sat" || (LY.style === "shade" && false);
+function drawBorders() {
+  borderL.clearLayers(); if (!LY.borders || !BORD) { map.removeLayer(borderL); return; }
+  L.geoJSON(BORD, { pane: "lines", interactive: false, style: { color: "#2B2420", weight: map.getZoom() >= 5 ? 1.1 : .8, opacity: .2 + LY.borderK / 100 * .7, fill: false } }).addTo(borderL);
+  borderL.addTo(map);
+}
+function boxHit(boxes, bx) { return boxes.some(o => bx[0] < o[2] && bx[2] > o[0] && bx[1] < o[3] && bx[3] > o[1]); }
+let BOXES = [];
+function placeNames() {
+  nameL.clearLayers(); BOXES = []; peakLabels(); if (!LY.names || !PLACES) { map.removeLayer(nameL); return; }
+  const z = map.getZoom(), bb = map.getBounds().pad(.05), lvl = LY.nameLvl;
+  const minPop = [[2, 1e7], [3, 4e6], [4, 1.5e6], [5, 6e5], [6, 2.5e5], [7, 9e4], [8, 3e4], [99, 5000]].find(([zz]) => z < zz + (lvl === 2 ? 1 : lvl === 0 ? -1 : 0))[1] * (lvl === 0 ? 2 : 1);
+  let n = 0;
+  for (const c of PLACES) {
+    if (c[3] < minPop) break; if (!bb.contains([c[1], c[2]])) continue;
+    const big = c[3] >= 1e6, pt = map.latLngToContainerPoint([c[1], c[2]]); const bx = [pt.x - 4, pt.y - 8, pt.x + 10 + c[0].length * (big ? 6.9 : 6.3), pt.y + 7];
+    if (boxHit(BOXES, bx)) continue;
+    BOXES.push(bx); L.marker([c[1], c[2]], { pane: "names", interactive: false, keyboard: false, icon: L.divIcon({ className: "place" + (big ? "" : " s") + (darkBase() && LY.style === "shade" ? "" : ""), html: `<i></i>${esc(c[0])}`, iconSize: null, iconAnchor: [3, 6] }) }).addTo(nameL);
+    if (++n >= 160) break;
+  }
+  nameL.addTo(map);
+}
+
+/* peaks and cities */
+let PEAKS = null, CITIES = null, peakL = L.layerGroup(), peakLab = L.layerGroup(), cityL = L.layerGroup();
+const pkR = L.canvas({ pane: "peaks", padding: .3, tolerance: 5 }), ctR = L.canvas({ pane: "cities", padding: .3, tolerance: 4 });
+const ISO = {}; PD.countries.forEach(c => ISO[c[1]] = c[0]);
+const cnames = s => s ? s.split(" ").map(a => ISO[a] || a).join(", ") : "";
+const share = h => { const cv = PD.curve; if (h <= 0) return 1; for (let i = 1; i < cv.length; i++) if (h <= cv[i][0]) { const a = cv[i - 1], b = cv[i], t = (h - a[0]) / (b[0] - a[0]); return a[1] + (b[1] - a[1]) * t; } return 0; };
+function peakPopup(p) {
+  const kind = { v: "Volcano", h: "Hill", m: "Mountain or summit" }[p[7]];
+  return `<b class="h">${esc(p[0] || "Unnamed summit")}</b><span class="mut">${kind}${p[5] ? " · " + esc(cnames(p[5])) : ""}</span><span class="big">${fmt(p[3])} m</span>${p[4] ? `Prominence ${fmt(p[4])} m<br>` : ""}Higher than ${pc(1 - share(p[3]), 1)} of the world's land.${p[9] === 1 ? "<br><span class='mut'>Height converted from feet (the source gave it without units).</span>" : p[9] === 2 ? "<br><span class='mut'>Height converted from kilometres.</span>" : ""}<br><a href="https://www.wikidata.org/wiki/${p[6]}" target="_blank" rel="noopener">Wikidata ${p[6]}</a>`;
+}
+function drawPeaks() {
+  peakL.clearLayers(); if (!LY.peaks || !PEAKS) { map.removeLayer(peakL); map.removeLayer(peakLab); placeNames(); return; }
+  const z = map.getZoom(), bb = map.getBounds().pad(.1), sz = map.getSize(), area = Math.min(1, sz.x * sz.y / (820 * 740));
+  const lim = Math.round([[2.5, 70], [3.5, 200], [4.5, 450], [5.5, 800], [6.5, 1400], [99, 3000]].find(([zz]) => z < zz)[1] * [0.5, 1, 2][LY.peakLvl] * area);
+  let n = 0;
+  for (const p of PEAKS) { if (!bb.contains([p[1], p[2]])) continue;
+    L.circleMarker([p[1], p[2]], { renderer: pkR, radius: p[3] > 6000 ? 4.2 : p[3] > 4000 ? 3.4 : 2.6, color: "#3A2416", weight: .9, fillColor: heightCol(p[3]), fillOpacity: 1 }).bindPopup(() => peakPopup(p)).addTo(peakL);
+    if (++n >= lim) break; }
+  peakL.addTo(map); placeNames();
+}
+function peakLabels() {
+  peakLab.clearLayers(); if (!LY.peaks || !PEAKS) return;
+  const z = map.getZoom(), bb = map.getBounds().pad(.02), sz = map.getSize(), area = Math.min(1, sz.x * sz.y / (820 * 740));
+  const lim = Math.max(4, Math.round([[2.5, 14], [3.5, 26], [4.5, 40], [6, 60], [99, 80]].find(([zz]) => z < zz)[1] * [0.5, 1, 1.6][LY.peakLvl] * area));
+  let n = 0;
+  for (const p of PEAKS) { if (!p[0] || !bb.contains([p[1], p[2]])) continue;
+    const pt = map.latLngToContainerPoint([p[1], p[2]]), t = `${p[0]} ${fmt(p[3])}`, bx = [pt.x + 4, pt.y - 7, pt.x + 10 + t.length * 6.2, pt.y + 7];
+    if (boxHit(BOXES, bx)) continue; BOXES.push(bx);
+    L.marker([p[1], p[2]], { pane: "names", interactive: false, keyboard: false, icon: L.divIcon({ className: "pk" + (LY.base === "sat" && LY.alpha < 40 ? " dk" : ""), html: `${esc(p[0])} <b>${fmt(p[3])}</b>`, iconSize: null, iconAnchor: [-6, 6] }) }).addTo(peakLab);
+    if (++n >= lim) break; }
+  peakLab.addTo(map);
+}
+function cityPopup(c) { return `<b class="h">${esc(c[0])}</b><span class="mut">${esc(c[5])} · ${fmt(c[4])} people</span><span class="big">${fmt(c[3])} m</span>above sea level (Wikidata). ${c[3] >= 1000 ? `Only ${pc(PD.cityShare(c[3]), 1)} of people in the listed cities live this high.` : ""}<br><a href="https://www.wikidata.org/wiki/${c[6]}" target="_blank" rel="noopener">Wikidata ${c[6]}</a>`; }
+function drawCities() {
+  cityL.clearLayers(); if (!LY.cities || !CITIES) { map.removeLayer(cityL); return; }
+  const z = map.getZoom(), bb = map.getBounds().pad(.1), minPop = z < 3 ? 1e6 : z < 4 ? 4e5 : z < 5 ? 2e5 : 0;
+  for (const c of CITIES) { if (c[4] < minPop) break; if (!bb.contains([c[1], c[2]])) continue;
+    L.circleMarker([c[1], c[2]], { renderer: ctR, radius: 2.5 + Math.sqrt(c[4] / 1e6) * 2.4, color: "#fff", weight: 1.2, fillColor: heightCol(c[3]), fillOpacity: .95 }).bindPopup(() => cityPopup(c)).addTo(cityL); }
+  cityL.addTo(map);
+}
+let morePeaks = null;
+async function loadPeaks(all) {
+  if (!PEAKS) { msg.textContent = "Loading peaks..."; PEAKS = await fetch("data/page/peaks.json").then(r => r.json()); msg.textContent = ""; }
+  if (all && !morePeaks) { morePeaks = fetch("data/page/peaks_more.json").then(r => r.json()).then(m => { PEAKS = PEAKS.concat(m); drawPeaks(); }); }
+  if (all) await morePeaks;
+}
+async function loadCities() { if (CITIES) return; CITIES = await fetch("data/page/cities.json").then(r => r.json()); }
+async function setPeaks(on) { LY.peaks = on; document.getElementById("pkBtn").setAttribute("aria-pressed", on); if (window.syncLayers) syncLayers(); saveLY(); if (on) await loadPeaks(); drawPeaks(); }
+async function setCities(on) { LY.cities = on; document.getElementById("ctBtn").setAttribute("aria-pressed", on); if (window.syncLayers) syncLayers(); saveLY(); if (on) await loadCities(); drawCities(); }
+document.getElementById("pkBtn").onclick = () => setPeaks(!LY.peaks);
+document.getElementById("ctBtn").onclick = () => setCities(!LY.cities);
+map.on("zoomend moveend", () => { if (LY.peaks && map.getZoom() >= 7 && !morePeaks) loadPeaks(true); drawPeaks(); drawCities(); });
+map.on("zoomend", drawBorders);
+
+/* layers panel */
+(function layerControl() {
+  const Ctl = L.Control.extend({ options: { position: "topright" }, onAdd() {
+    const d = L.DomUtil.create("div"); L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d);
+    d.innerHTML = `<button class="lyrBtn" aria-expanded="false" aria-controls="lyrPanel">Map layers</button>
+<div class="lyrPanel" id="lyrPanel" hidden>
+ <div class="row"><label for="lyStyle" style="font-weight:600">Terrain</label><div class="sub"><select id="lyStyle" aria-label="Terrain style"><option value="both">Height tints and shading</option><option value="tint">Height tints only</option><option value="shade">Hill shading only</option><option value="band">Height steps (contour bands)</option><option value="off">Off (plain base map)</option></select></div></div>
+ <div class="row"><label style="font-weight:600">Terrain strength</label><div class="sub"><span>opacity</span><input type="range" id="lyAlpha" min="10" max="100" step="5" aria-label="Terrain opacity"></div><div class="sub"><span>relief</span><input type="range" id="lyRelief" min="0" max="100" step="5" aria-label="Hill shading strength"></div></div>
+ <div class="row"><label><input type="checkbox" id="lySea"> Sea floor depths</label></div>
+ <div class="row"><label for="lyBase" style="font-weight:600">Base map</label><div class="sub"><select id="lyBase" aria-label="Base map"><option value="light">Plain light grey</option><option value="dark">Plain dark grey</option><option value="sat">Satellite</option><option value="none">None</option></select></div></div>
+ <div class="hd">On top</div>
+ <div class="row"><label><input type="checkbox" id="lyPeaks"> Peaks</label><div class="sub"><span>how many</span><select id="lyPeakLvl" aria-label="How many peaks"><option value="0">Fewer</option><option value="1">Some</option><option value="2">Lots</option></select></div></div>
+ <div class="row"><label><input type="checkbox" id="lyCities"> Cities by height</label></div>
+ <div class="row"><label><input type="checkbox" id="lyBorders"> Country borders</label><div class="sub"><span>strength</span><input type="range" id="lyBorderK" min="10" max="100" step="5" aria-label="Border strength"></div></div>
+ <div class="row"><label><input type="checkbox" id="lyNames"> Place names</label><div class="sub"><span>how many</span><select id="lyNameLvl" aria-label="How many place names"><option value="0">Fewer</option><option value="1">Some</option><option value="2">Lots</option></select></div></div>
+ <button class="reset" id="lyReset">Reset layers</button>
+</div>`;
+    return d; } });
+  map.addControl(new Ctl());
+  const q = id => document.getElementById(id), btn = map.getContainer().querySelector(".lyrBtn"), pan = q("lyrPanel");
+  btn.onclick = () => { const o = pan.hidden; pan.hidden = !o; btn.setAttribute("aria-expanded", o); };
+  const sync = () => { q("lyStyle").value = LY.style; q("lyAlpha").value = LY.alpha; q("lyRelief").value = LY.relief; q("lySea").checked = LY.sea; q("lyBase").value = LY.base;
+    q("lyPeaks").checked = LY.peaks; q("lyPeakLvl").value = LY.peakLvl; q("lyCities").checked = LY.cities; q("lyBorders").checked = LY.borders; q("lyBorderK").value = LY.borderK; q("lyNames").checked = LY.names; q("lyNameLvl").value = LY.nameLvl;
+    document.querySelectorAll("#styleBtns .btn").forEach(b => b.setAttribute("aria-pressed", b.dataset.s === LY.style)); };
+  window.syncLayers = sync;
+  const on = (id, ev, f) => q(id).addEventListener(ev, e => { f(e.target); saveLY(); });
+  on("lyStyle", "change", t => setStyle(t.value));
+  on("lyAlpha", "input", t => { LY.alpha = +t.value; terrain.setOpacity(LY.alpha / 100); });
+  on("lyRelief", "change", t => { LY.relief = +t.value; repaint(); });
+  on("lySea", "change", t => { LY.sea = t.checked; repaint(); });
+  on("lyBase", "change", t => { LY.base = t.value; setBase(); placeNames(); });
+  on("lyPeaks", "change", t => setPeaks(t.checked)); on("lyPeakLvl", "change", t => { LY.peakLvl = +t.value; setPeaks(true); });
+  on("lyCities", "change", t => setCities(t.checked));
+  on("lyBorders", "change", t => { LY.borders = t.checked; drawBorders(); }); on("lyBorderK", "input", t => { LY.borderK = +t.value; LY.borders = q("lyBorders").checked = true; drawBorders(); });
+  on("lyNames", "change", t => { LY.names = t.checked; placeNames(); }); on("lyNameLvl", "change", t => { LY.nameLvl = +t.value; LY.names = q("lyNames").checked = true; placeNames(); });
+  q("lyReset").onclick = () => { Object.assign(LY, LYDEF); saveLY(); sync(); setBase(); setStyle(LY.style); drawBorders(); setPeaks(LY.peaks); setCities(LY.cities); };
+  sync();
+})();
+function setStyle(s) {
+  LY.style = s; saveLY(); if (window.syncLayers) syncLayers();
+  if (s === "off") map.removeLayer(terrain); else { if (!map.hasLayer(terrain)) terrain.addTo(map); terrain.setOpacity(LY.alpha / 100); repaint(); }
+  legend();
+}
+document.querySelectorAll("#styleBtns .btn").forEach(b => b.onclick = () => setStyle(b.dataset.s));
+
+/* legend: a metre scale */
+function legend() {
+  const box = document.getElementById("legend"); box.innerHTML = ""; const W0 = 300, s = el("svg", { viewBox: `0 0 ${W0} 104` }, box), x0 = 8, x1 = W0 - 8;
+  const T = [-400, 0, 250, 500, 1000, 1500, 2000, 3000, 4000, 5000, 6000, 7000];      // classes placed evenly, not to scale
+  const LB = { 0: "0", 500: "500", 1000: "1k", 2000: "2k", 3000: "3k", 4000: "4k", 5000: "5k", 6000: "6k" };
+  const xs = i => x0 + (x1 - x0) * i / (T.length - 1);
+  if (LY.style === "band" || LY.style === "shade") {
+    for (let i = 0; i < T.length - 1; i++) { const h = T[i]; const c = h < 0 ? LOWLAND : LY.style === "band" ? bandRGB(bandOf(h)) : [236, 233, 226]; el("rect", { x: xs(i), y: 10, width: xs(i + 1) - xs(i) + .5, height: 18, fill: rgb(c), stroke: LY.style === "band" ? "rgba(0,0,0,.25)" : "none" }, s); }
+  } else {
+    const g = el("linearGradient", { id: "lg" }, s);
+    el("stop", { offset: 0, "stop-color": rgb(LOWLAND) }, g); el("stop", { offset: 1 / (T.length - 1) - .001, "stop-color": rgb(LOWLAND) }, g);
+    for (let i = 1; i < T.length - 1; i++) for (let k = 0; k <= 4; k++) { const h = T[i] + (T[i + 1] - T[i]) * k / 4; el("stop", { offset: (i + k / 4) / (T.length - 1), "stop-color": rgb(landRGB(h)) }, g); }
+    el("rect", { x: x0, y: 10, width: x1 - x0, height: 18, fill: "url(#lg)" }, s);
+  }
+  el("rect", { x: x0, y: 10, width: x1 - x0, height: 18, fill: "none", stroke: css("--border") }, s);
+  lbl(s, (xs(0) + xs(1)) / 2, 45, "<0", "lab s", "middle");
+  T.forEach((h, i) => { if (!(h in LB)) return; const x = xs(i); el("line", { x1: x, x2: x, y1: 28, y2: 33, stroke: css("--fg") }, s); lbl(s, x, 45, LB[h], "lab s", "middle"); });
+  lbl(s, x1, 45, "m", "lab s m", "end");
+  lbl(s, x0, 64, LY.style === "shade" ? "Hill shading only, lit from the north-west." : LY.style === "band" ? "Height steps: one colour per class." : "Metres above sea level (1k = 1,000 m).", "lab s m");
+  lbl(s, x0, 80, "<0: land below sea level (teal-green).", "lab s m");
+  lbl(s, x0, 96, "Blue: sea floor, deeper is darker.", "lab s m");
+}
+
+/* readout and the mini hypsometric curve */
+let marker = null, cur = null;
+function miniCurve(h) {
+  const box = document.getElementById("miniCurve"); box.innerHTML = ""; const W0 = 300, H0 = 128, s = el("svg", { viewBox: `0 0 ${W0} ${H0}` }, box);
+  const L0 = 34, R0 = W0 - 6, T0 = 8, B0 = H0 - 22, X = v => L0 + (R0 - L0) * v, Y = m => B0 - (B0 - T0) * Math.min(1, m / 7000);
+  for (let k = 0; k < PD.curve.length - 1; k++) { const a = PD.curve[k], b = PD.curve[k + 1]; el("rect", { x: L0, y: Y(b[0]), width: X(a[1]) - L0, height: Y(a[0]) - Y(b[0]) + .4, fill: rgb(landRGB(a[0])) }, s); }
+  el("path", { d: "M" + PD.curve.map(c => X(c[1]) + " " + Y(c[0])).join(" L"), fill: "none", stroke: css("--fg"), "stroke-width": 1.4 }, s);
+  [0, 2000, 4000, 6000].forEach(m => { lbl(s, L0 - 4, Y(m) + 4, m ? m / 1000 + "k" : "0", "lab s m", "end"); el("line", { x1: L0 - 2, x2: L0, y1: Y(m), y2: Y(m), stroke: css("--muted") }, s); });
+  [0, .25, .5, .75, 1].forEach(v => lbl(s, X(v), H0 - 6, (v * 100) + "%", "lab s m", v === 0 ? "start" : v === 1 ? "end" : "middle"));
+  if (h != null && h > 0) { const v = share(h); el("line", { x1: L0, x2: X(v), y1: Y(h), y2: Y(h), stroke: "#B4532A", "stroke-width": 1.5, "stroke-dasharray": "3 2" }, s); el("circle", { cx: X(v), cy: Y(h), r: 4.5, fill: "#B4532A", stroke: "#fff", "stroke-width": 1.5 }, s); }
+}
+function readout(h, ll, precise, near) {
+  const box = document.getElementById("readout"); if (h == null) return;
+  const land = h > 0 || (countryAt(ll.lng, ll.lat) != null), ctry = countryAt(ll.lng, ll.lat);
+  let t;
+  if (!land) t = `<span class="big" style="color:var(--ice)">${fmt(-h)} m deep</span><span class="mut">Sea floor${precise ? "" : " (approximate at this zoom)"}.</span>`;
+  else t = `<span class="big">${h < 0 ? fmt(-h) + " m below" : fmt(h) + " m"}</span>${h < 0 ? "sea level, on land." : "above sea level."} ${h > 0 ? `Higher than ${pc(1 - share(h), 1)} of the world's land.` : ""}<br><span class="mut">${ctry ? esc(ctry.n) + " · " : ""}${precise ? "from the detailed tile at this point" : "at this zoom, averaged over " + fmt(40075 * Math.cos(ll.lat * Math.PI / 180) / (256 * Math.pow(2, map.getZoom())) * 1000) + " m"}</span>`;
+  if (near) t += `<br><span class="mut">Nearest listed peak: ${esc(near[0])}, ${fmt(near[3])} m, ${near.d < 1 ? "here" : Math.round(near.d) + " km away"}</span>`;
+  box.innerHTML = t; miniCurve(land ? h : null); return t;
+}
+const hav = (a, b, c, d) => { const p = Math.PI / 180, x = Math.sin((c - a) * p / 2) ** 2 + Math.cos(a * p) * Math.cos(c * p) * Math.sin((d - b) * p / 2) ** 2; return 2 * 6371 * Math.asin(Math.sqrt(x)); };
+function nearestPeak(ll) { if (!PEAKS) return null; let best = null, bd = 25; for (const p of PEAKS) { if (Math.abs(p[1] - ll.lat) > .3 || !p[0]) continue; const d = hav(ll.lat, ll.lng, p[1], p[2]); if (d < bd) { bd = d; best = p; } } if (best) best.d = bd; return best; }
+let lastMove = 0;
+map.on("mousemove", e => { const now = performance.now(); if (now - lastMove < 40) return; lastMove = now; const ll = e.latlng.wrap(); const h = heightAt(ll.lat, ll.lng, map.getZoom()); if (h != null && !cur) readout(h, ll, false); });
+map.on("mouseout", () => { if (!cur) miniCurve(null); });
+async function pickPoint(ll, title) {
+  ll = L.latLng(ll.lat, ((ll.lng + 540) % 360) - 180);
+  const z = Math.min(14, Math.max(12, Math.round(map.getZoom()) + 1)); const h = await fetchHeight(ll.lat, ll.lng, z); cur = ll;
+  if (h == null) { document.getElementById("readout").textContent = "Could not load the terrain tile for this point."; return; }
+  const near = nearestPeak(ll), t = readout(h, ll, true, near);
+  if (marker) map.removeLayer(marker);
+  marker = L.marker(ll, { icon: L.divIcon({ className: "pin", iconSize: [18, 18] }), title: title || "Selected point" }).addTo(map);
+  L.popup({ maxWidth: 260 }).setLatLng(ll).setContent((title ? `<b class="h">${esc(title)}</b>` : "") + t).openOn(map);
+}
+map.on("click", e => pickPoint(e.latlng));
+map.on("popupclose", () => { cur = null; });
+
+/* views and search */
+const VIEWS = { world: [[28, 15], 2], him: [[29.5, 85], 6], andes: [[-20, -67], 5], alps: [[46.2, 9.5], 7], uk: [[54.5, -3.5], 6] };
+document.querySelectorAll("#viewBtns .btn").forEach(b => b.onclick = () => { const v = VIEWS[b.dataset.v]; map.setView(v[0], small ? v[1] - 1 : v[1]); document.getElementById("lmap").scrollIntoView({ block: "nearest", behavior: "smooth" }); });
+const qi = document.getElementById("q"), sug = document.getElementById("sug");
+const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+let hits = [], hsel = -1;
+qi.addEventListener("focus", () => { loadPeaks(true); loadCities(); });
+qi.addEventListener("input", async () => {
+  const s = norm(qi.value.trim()); if (s.length < 2) { sug.style.display = "none"; qi.setAttribute("aria-expanded", "false"); return; }
+  await Promise.all([loadPeaks(true), loadCities()]); const out = [];
+  for (const c of PD.countries) if (norm(c[0]).startsWith(s)) out.push({ t: "c", name: c[0], sub: `country · average ${fmt(c[2])} m`, c, r: 0 });
+  for (const p of PEAKS) { if (p[0] && norm(p[0]).includes(s)) out.push({ t: "p", name: p[0], sub: `peak · ${fmt(p[3])} m · ${cnames(p[5])}`, p, r: norm(p[0]).startsWith(s) ? 1 : 3 }); if (out.length > 200) break; }
+  for (const c of CITIES) { if (norm(c[0]).startsWith(s)) out.push({ t: "t", name: c[0], sub: `city · ${fmt(c[3])} m · ${c[5]}`, c, r: 2 }); if (out.length > 300) break; }
+  hits = out.sort((a, b) => (norm(a.name) === s ? 0 : 1) - (norm(b.name) === s ? 0 : 1) || a.r - b.r).slice(0, 12);
+  sug.innerHTML = hits.map((h, i) => `<li role="option" data-i="${i}">${esc(h.name)} <span>${esc(h.sub)}</span></li>`).join(""); hsel = -1;
+  sug.style.display = hits.length ? "block" : "none"; qi.setAttribute("aria-expanded", hits.length ? "true" : "false");
+});
+sug.addEventListener("click", e => { const li = e.target.closest("li"); if (li) pick(+li.dataset.i); });
+qi.addEventListener("keydown", e => { if (!hits.length) return; if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); hsel = (hsel + (e.key === "ArrowDown" ? 1 : -1) + hits.length) % hits.length; [...sug.children].forEach((li, i) => li.setAttribute("aria-selected", i === hsel)); } else if (e.key === "Enter") { e.preventDefault(); pick(Math.max(0, hsel)); } });
+function goCountry(c) { map.setView([c[9], c[10]], c[5] > 2e6 ? 3.5 : c[5] > 3e5 ? 5 : c[5] > 3e4 ? 6.5 : 8);
+  L.popup({ maxWidth: 270 }).setLatLng([c[9], c[10]]).setContent(`<b class="h">${esc(c[0])}</b><span class="mut">${esc(c[14])}</span><span class="big">${fmt(c[2])} m</span>average height of its land on the 10 km grid${c[8] ? "" : " (a small country: roughly resolved)"}; ${pc(c[7], 0)} above 2,000 m.<br>Highest 10 km cell ${fmt(c[4])} m.${c[11] ? `<br>Highest listed peak: ${esc(c[11])}, ${fmt(c[12])} m${c[13] ? "" : " (not confirmed)"}.` : ""}`).openOn(map); }
+function pick(i) { const h = hits[i]; if (!h) return; qi.value = h.name; sug.style.display = "none"; qi.setAttribute("aria-expanded", "false");
+  if (h.t === "c") goCountry(h.c);
+  else if (h.t === "p") { if (!LY.peaks) setPeaks(true); map.setView([h.p[1], h.p[2]], Math.max(map.getZoom(), 10)); setTimeout(() => L.popup().setLatLng([h.p[1], h.p[2]]).setContent(peakPopup(h.p)).openOn(map), 350); }
+  else { map.setView([h.c[1], h.c[2]], Math.max(map.getZoom(), 10)); setTimeout(() => L.popup().setLatLng([h.c[1], h.c[2]]).setContent(cityPopup(h.c)).openOn(map), 350); }
+  document.getElementById("lmap").scrollIntoView({ block: "nearest", behavior: "smooth" }); }
+document.addEventListener("click", e => { if (!e.target.closest(".searchbox")) sug.style.display = "none"; });
+window.goPlace = (lat, lon, z, name) => { map.setView([lat, lon], z); document.getElementById("lmap").scrollIntoView({ block: "start", behavior: "smooth" }); if (name) setTimeout(() => pickPoint(L.latLng(lat, lon), name), 500); };
+window.goIso = a3 => { const c = PD.countries.find(c => c[1] === a3); if (c) { goCountry(c); document.getElementById("lmap").scrollIntoView({ block: "start", behavior: "smooth" }); } };
+
+/* threshold */
+const thr = document.getElementById("thr"), thrOut = document.getElementById("thrOut"), thrNote = document.getElementById("thrNote");
+let thrT = null;
+thr.addEventListener("input", () => { LY.thr = +thr.value; thrOut.textContent = LY.thr ? fmt(LY.thr) + " m" : "off";
+  thrNote.textContent = LY.thr ? `${pc(share(LY.thr), 1)} of the world's land is higher than ${fmt(LY.thr)} m; only ${pc(PD.cityShare(LY.thr), 1)} of people in its listed cities live that high.` : "Drag to see which land stands above a height.";
+  clearTimeout(thrT); thrT = setTimeout(repaint, 60); });
+
+PD.cityShare = h => { let a = 0; for (const b of PD.cityAbove) if (h >= b[0]) a = b[1]; return a; };
+setBase(); legend(); miniCurve(null);
+fetch("data/page/borders.json").then(r => r.json()).then(b => { b.features.forEach(f => { let x0 = 999, y0 = 999, x1 = -999, y1 = -999; const polys = f.geometry.type === "Polygon" ? [f.geometry.coordinates] : f.geometry.coordinates; polys.forEach(p => p[0].forEach(q => { x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); y0 = Math.min(y0, q[1]); y1 = Math.max(y1, q[1]); })); f.bbox = [x0, y0, x1, y1]; }); BORD = b; MASK.clear(); repaint(); drawBorders(); });
+fetch("data/page/places.json").then(r => r.json()).then(p => { PLACES = p; placeNames(); });
+if (LY.peaks) setPeaks(true); if (LY.cities) setCities(true);
+if (LY.style !== "both") setStyle(LY.style);
+document.getElementById("theme").onclick = () => { const r = document.documentElement; r.dataset.theme = isDark() ? "light" : "dark"; redraws.forEach(f => f()); legend(); miniCurve(null); };
+
+/*CHARTS*/
+</script>
+/*FULLSCREEN*/
+</body>
+</html>

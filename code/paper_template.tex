@@ -1,0 +1,135 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Pagella}
+\newfontfamily\headfont{Inter}[UprightFont=*-ExtraBold,BoldFont=*-ExtraBold,Extension=.otf,Path=/usr/share/fonts/opentype/inter/]
+\usepackage[a4paper,margin=2.3cm]{geometry}
+\usepackage{graphicx}
+\graphicspath{ {../blog/} }
+\usepackage{booktabs,float,caption,array,xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage{titlesec}
+\usepackage{setspace}
+\usepackage[round]{natbib}
+\setstretch{1.05}
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\textfraction}{0.1}
+\renewcommand{\floatpagefraction}{0.75}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+\titleformat{\section}{\headfont\Large}{\thesection}{0.8em}{}
+\titleformat{\subsection}{\headfont\large}{\thesubsection}{0.8em}{}
+\captionsetup{font=small,labelfont=bf}
+\urlstyle{same}
+\hypersetup{pdftitle={How High Is the World?},pdfauthor={Tristan Hotham}}
+
+\begin{document}
+\begin{center}
+{\Large\bfseries How High Is the World?\\[2pt] Height Above Sea Level, Mountains and Where People Live, from Open Terrain Data\par}
+\vspace{1.2em}
+{\large Tristan Hotham\par}
+\vspace{0.3em}
+{\small Independent researcher\\
+ORCID: 0000-0003-4931-9349\\
+DOI: {{DOILINK}}\par}
+\vspace{0.8em}
+2026
+\end{center}
+
+\begin{quote}
+\small
+\begin{center}\textbf{Abstract}\end{center}
+I describe the height of the world's land from the open AWS Terrain Tiles (Mapzen's Terrarium mosaic of SRTM, GMTED2010, ETOPO1 and national elevation models), using the zoom 4 level of the tiles as a {{grid.px|int}} by {{grid.px|int}} Web Mercator grid of about {{grid.km_equator|f1}} km at the equator, with every cell weighted by its true area and land defined by Natural Earth countries less lakes. The world's land averages {{land.mean|int}} m above sea level ({{noant.mean|int}} m without Antarctica) with a median of {{land.median|int}} m; {{land.above.1000|pct}} of it lies above 1,000 m, {{land.above.2000|pct}} above 2,000 m and {{land.above.5000|pct1}} above 5,000 m. Antarctica is the highest continent ({{continents.0.mean|int}} m) and Asia the highest without ice ({{continents.1.mean|int}} m); among countries large enough to be resolved, {{countries.high.0.name|raw}} ({{countries.high.0.mean|int}} m) is the highest and the {{countries.low.0.name|raw}} ({{countries.low.0.mean|int}} m) the lowest. About {{below.named|int}} km² of land in named depressions lies below sea level at this resolution, {{below.caspian_share_named|pct}} of it around the Caspian. I check {{peaks.n_wd|int}} Wikidata peaks against the terrain, keeping {{peaks.n|int}}, and confirm the highest point of {{peaks.hp_verified|int}} countries against an independent list. Finally, of the {{cities.pop_bn|f1}} billion people in {{cities.n|int}} Wikidata cities of 50,000 or more, {{cities.share_above.1000|pct1}} live above 1,000 m and {{cities.share_above.2000|pct1}} above 2,000 m: people live far lower than the land lies. An interactive map draws the same tiles at every zoom with a height readout for any point.
+
+\textbf{Keywords:} elevation; hypsometry; topography; mountains; prominence; height above sea level; cities; SRTM; Wikidata; open data; mapping
+\end{quote}
+
+\section{Introduction}
+Height above sea level is one of the first facts we learn about a place and one of the least often mapped well. It sets climate, vegetation and the cost of moving and building, and it has long been summarised by the hypsometric curve: the share of a region's area that lies above each height \citep{strahler}. Global elevation models now make it possible to draw that curve, and the map behind it, for the whole planet from open data. The most convenient form is the set of web tiles first built by Mapzen and now hosted as an open dataset by Amazon \citep{terraintiles}, which merge the Shuttle Radar Topography Mission \citep{srtm}, GMTED2010 \citep{gmted}, ETOPO1 \citep{etopo1} and many national models into one global mosaic at every web map zoom level.
+
+This study does three things. It measures the height of the world's land, by continent and by country, from the coarsest level of those tiles, weighting every cell by its true area and stating plainly what a 10 km grid can and cannot resolve. It assembles and checks open data on peaks and on the height of cities, which are messier than they look. And it builds an interactive map (\url{{{meta.page}}}) that decodes the tiles in the browser at every zoom, with height tints, shaded relief, height steps and a readout of the height of any point.
+
+\section{Data}
+\textbf{Terrain.} The AWS Terrain Tiles in Terrarium encoding are 256 pixel PNG tiles in Web Mercator in which each pixel's colour encodes a height: height = R $\times$ 256 + G + B / 256 $-$ 32,768 metres. Land heights come from SRTM (3 arc seconds, about 90 m, and 1 arc second in the United States), national models (for example NED and 3DEP in the United States, the Canadian Digital Elevation Data, EU-DEM, Geoscience Australia's and LINZ's models, INEGI's for Mexico and Ordnance Survey's OS Terrain 50 for Great Britain), GMTED2010 at coarser levels and outside SRTM's coverage, and ArcticDEM in the far north; sea floor heights come from ETOPO1 and other bathymetry \citep{joerd}. Heights are relative to mean sea level (for SRTM, the EGM96 geoid). I use the 256 tiles of zoom level 4, which form a 4,096 by 4,096 grid covering the world between 85.05 degrees north and south; a cell is {{grid.km_equator|f1}} km across at the equator and {{grid.km_60|f1}} km at 60 degrees. For the part of Antarctica south of 85.05 degrees I use ETOPO10, a 10 arc minute grid derived from ETOPO1 (ice surface).
+
+\textbf{Land.} Natural Earth's 1:10m countries \citep{naturalearth}, less its lakes and reservoirs (salt pans such as Kati Thanda-Lake Eyre stay land), define land and the country of each cell.
+
+\textbf{Peaks.} Every Wikidata item that is a mountain, hill, summit or volcano of any kind with an elevation (P2044), as stated and as normalised to metres by Wikidata from the statement's unit, with prominence (P2660), coordinates, country and number of sitelinks: {{peaks.n_rows|int}} rows for {{peaks.n_wd|int}} distinct items \citep{wikidata}. I add the few summits Wikidata lacks or cannot place from Natural Earth's elevation points (public domain) and from the 125 most prominent summits in English Wikipedia's list of peaks by prominence \citep{wpprom}, which also supplies the prominence ranking; both carry Wikidata identifiers.
+
+\textbf{Cities.} Wikidata items for cities of 50,000 or more people with an elevation and a population: {{cities.n_items|int}} items.
+
+\textbf{Check list.} A list of the highest point of each country compiled from peakbagger.com, used only to check the open data and not republished.
+
+{{TABLE_SOURCES}}
+
+\section{Methods}
+\subsection{The grid and its statistics}
+The 256 tiles are mosaicked and decoded to heights. {{grid.n_spikes|int}} cells differ from the median of their eight neighbours by more than 2,500 m in a way no real terrain does (a spike of {{grid.spike_max|int}} m on Baffin Island, holes several kilometres deep in shallow ground); they are replaced by that median. Small islands a few metres high amid deep ocean, which look similar, are kept.
+
+Each cell's true area is computed exactly from its two bounding latitudes on a sphere of radius 6,371 km. Natural Earth countries and lakes are rasterised on a grid twice as fine, so every cell carries the share of its area that is land and the share that belongs to each country. A coastal cell's height averages land with sea floor, so for land statistics I floor heights at 0 m except in cells that are wholly land and surrounded by wholly-land cells; only those interior cells may be below sea level. Ice counts at its surface. Shares, medians and the hypsometric curve come from area-weighted histograms in 5 m bins (25 m for countries); means are exact area-weighted means. A country is treated as resolved, and ranked, if it covers at least 100 cells.
+
+\subsection{Peaks}
+Rows are merged by Wikidata item, and the metre value normalised from the preferred statement is tried first. Each candidate height is compared with the 5 by 5 block of cells around the point (about 50 km at the equator): a summit can rise well above the highest 10 km average nearby, but across 15,000 European summits the excess over that highest cell, measured in units of the local relief plus 300 m, stays below 0.8 for 99.9\% of them, and for Natural Earth's 630 named mountains below 1.22 for 95\%, with the largest values on small islands. A height that is implausible in metres but plausible in feet (excess above 3.0 away from small islands, or higher than every summit of its continent in Natural Earth), which points to a unit entered wrongly, is converted; values below 10 that only fit as kilometres are converted; heights that fit nothing are dropped. Natural Earth's or Wikipedia's height is used only when no Wikidata value fits. Finally, a summit away from the coast that is more than 30 m higher than the independent high point of every country it lies in is dropped. A summit's countries are the Natural Earth countries within 1 km of its point, plus its Wikidata country if that lies within 25 km, plus the country named in the Wikipedia list.
+
+\subsection{Cities}
+Duplicate rows are merged (largest population; the height and point that best fit the grid), metropolitan areas, provinces, districts and similar aggregates are dropped, as is a second item of the same name within 10 km of a larger one. A city's height must lie between the lowest and highest cells of the 3 by 3 block around it, with allowances for relief; values that only fit in feet are converted for American and British items and others dropped. Wikidata gives Chinese prefecture-level cities the population of the whole prefecture, so in the ranking of cities of a million or more a Chinese city counts only if Natural Earth's populated places give the same place, within 30 km, an urban population of a million or more, and that figure is shown; {{cities.n_prefecture_excluded|int}} are left out, among them Lijiang (2,400 m) and Zhaotong.
+
+\section{Results}
+\subsection{The hypsometry of the land}
+The world's land, {{land.area_m|f1}} million km² including Antarctica's ice and excluding lakes, has a mean height of {{land.mean|int}} m and a median of {{land.median|int}} m (Figure~\ref{fig:hyps}). {{land.above.500|pct}} lies above 500 m, {{land.above.1000|pct}} above 1,000 m, {{land.above.2000|pct}} above 2,000 m, {{land.above.3000|pct1}} above 3,000 m, {{land.above.4000|pct1}} above 4,000 m and {{land.above.5000|pct1}} above 5,000 m. Antarctica, {{antarctica.area_m|f1}} million km² at a mean of {{antarctica.mean|int}} m, dominates the upper middle of the curve: without it the land averages {{noant.mean|int}} m, with {{noant.above.1000|pct}} above 1,000 m and {{noant.above.2000|pct1}} above 2,000 m; without Greenland's ice too, {{noice.mean|int}} m. The mean is a little below the figure of about 840 m often quoted for the land, as expected for a smoothed grid whose coastal cells are floored at sea level.
+
+Over the whole Earth, land and sea floor together, {{earth.above0|pct1}} of the surface lies above sea level and the sea floor averages {{earth.sea_depth|int}} m down (a second curve on the interactive page).
+
+\begin{figure}[tbp]\centering\includegraphics[width=\linewidth]{b_world_relief.png}\caption{Height above sea level, with shaded relief (vertical exaggeration 24 times), from the zoom 4 AWS Terrain Tiles resampled to 0.075 degrees and shown in the Equal Earth projection.}\label{fig:map}\end{figure}
+\begin{figure}[tbp]\centering\includegraphics[width=.86\linewidth]{b_hypsometry.png}\caption{Hypsometric curve of the world's land: share of land area higher than each height, with and without Antarctica.}\label{fig:hyps}\end{figure}
+
+\subsection{Continents and countries}
+By Natural Earth's continents, Antarctica is highest ({{continents.0.mean|int}} m), then Asia ({{continents.1.mean|int}} m), North America ({{continents.2.mean|int}} m, raised by Greenland's ice), Africa ({{continents.3.mean|int}} m), South America ({{continents.4.mean|int}} m), Europe ({{continents.5.mean|int}} m) and Oceania ({{continents.6.mean|int}} m) (Figure~\ref{fig:countries}). Among the {{countries.n_ranked|int}} countries covering at least 100 cells, the highest on average are {{countries.high.0.name|raw}} ({{countries.high.0.mean|int}} m), {{countries.high.1.name|raw}} ({{countries.high.1.mean|int}} m), {{countries.high.2.name|raw}} ({{countries.high.2.mean|int}} m), {{countries.high.3.name|raw}} ({{countries.high.3.mean|int}} m) and {{countries.high.4.name|raw}} ({{countries.high.4.mean|int}} m); the lowest are the {{countries.low.0.name|raw}} ({{countries.low.0.mean|int}} m), {{countries.low.1.name|raw}} ({{countries.low.1.mean|int}} m), {{countries.low.2.name|raw}} ({{countries.low.2.mean|int}} m), {{countries.low.3.name|raw}} ({{countries.low.3.mean|int}} m) and {{countries.low.4.name|raw}} ({{countries.low.4.mean|int}} m). Lesotho and Rwanda are the only countries in the ranking whose lowest cell lies above 1,000 m (Lesotho's is at {{countries.pick.LSO.min|int}} m). Table~\ref{tab:countries} gives more.
+
+The grid smooths these values. Nepal's mean of {{countries.pick.NPL.mean|int}} m is lower than figures often quoted, because the deep valleys and high ridges of the Himalaya are averaged together and the flat Terai is large; and the highest cell in the whole grid is {{grid.highest_cell|int}} m, {{derived.everest_vs_cell|int}} m below the summit of Everest.
+
+{{TABLE_COUNTRIES}}
+\begin{figure}[tbp]\centering\includegraphics[width=\linewidth]{b_countries.png}\caption{Mean height of land by continent, and the highest and lowest countries among those covering at least 100 grid cells.}\label{fig:countries}\end{figure}
+
+\subsection{Land below sea level}
+Interior land cells below 0 m, outside Antarctica and Greenland, form {{below.n_patches|int}} patches. Named depressions add up to {{below.named|int}} km²: the Caspian Depression ({{below.g.caspian.area|int}} km²), Qattara ({{below.g.qattara.area|int}} km²), Kati Thanda-Lake Eyre ({{below.g.eyre.area|int}} km²), the Netherlands ({{below.g.nl.area|int}} km²), Afar and Danakil ({{below.g.afar.area|int}} km²), the Dead Sea and Jordan valley ({{below.g.deadsea.area|int}} km², lowest cell {{below.g.deadsea.min|int}} m) and smaller basins down to Death Valley ({{below.g.death.area|int}} km²) (Figure~\ref{fig:below}). A further {{below.g.else.area|int}} km² of small patches on deltas and coastal flats is partly real and partly sea floor averaged into coastal cells, and is not counted.
+\begin{figure}[tbp]\centering\includegraphics[width=\linewidth]{b_below_sea.png}\caption{Land below sea level (teal) on the 10 km grid in four depressions.}\label{fig:below}\end{figure}
+
+\subsection{Peaks}
+Cleaning left {{peaks.n|int}} summits. {{peaks.ft_stated|int}} heights were stated in feet in Wikidata and normalised; the checks converted a further {{peaks.feet|int}} from feet and {{peaks.km|int}} from kilometres, and {{peaks.dropped|int}} items were dropped ({{peaks.no_coord|int}} of them for lack of coordinates). The highest summit of each continent is Everest ({{peaks.cont_top.Asia.elev|int}} m), Aconcagua ({{peaks.cont_top.South America.elev|int}} m), Denali ({{peaks.cont_top.North America.elev|int}} m), Kilimanjaro ({{peaks.cont_top.Africa.elev|int}} m), Elbrus ({{peaks.cont_top.Europe.elev|int}} m), Vinson Massif ({{peaks.cont_top.Antarctica.elev|int}} m) and, by Natural Earth's continents, Mount Wilhelm ({{peaks.cont_top.Oceania.elev|int}} m) in Papua New Guinea; Puncak Jaya ({{peaks.prominent.8.elev|int}} m) lies in Indonesia and so in Asia. By prominence (Figure~\ref{fig:prom}), Everest, Aconcagua ({{peaks.prominent.1.prom|int}} m), Denali ({{peaks.prominent.2.prom|int}} m) and Kilimanjaro ({{peaks.prominent.3.prom|int}} m) lead; K2 is {{peaks.k2_prom_rank|ord}}.
+
+The highest summit in the cleaned data agrees within 30 m with the independent list of national high points for {{peaks.hp_verified|int}} of the {{peaks.hp_checked|int}} countries in both. In {{peaks.hp_status.open data lacks the high point|int}} the open data lacks the true summit and in {{peaks.hp_status.no peak in the open data|int}} it has no summit at all; in {{peaks.hp_status.open data higher|int}} it has a higher one, for reasons that include definitions (Mount Scenery on Saba is the highest point of the Kingdom of the Netherlands) as well as errors.
+\begin{figure}[tbp]\centering\includegraphics[width=.92\linewidth]{b_prominence.png}\caption{The fifteen most prominent peaks: height (pale) and prominence (dark). From English Wikipedia's list of peaks by prominence.}\label{fig:prom}\end{figure}
+
+\subsection{Where people live}
+The {{cities.n|int}} cities kept hold {{cities.pop_bn|f1}} billion people by Wikidata's figures. Half of them live below {{cities.median_person|int}} m. {{cities.share_above.1000|pct1}} live above 1,000 m and {{cities.share_above.2000|pct1}} above 2,000 m, against {{land.above.1000|pct}} and {{land.above.2000|pct}} of the land: above 2,000 m the land's share is {{derived.land_above2000_vs_cities|f1}} times the people's, or {{derived.noant_above2000_vs_cities|f1}} times without Antarctica (Figure~\ref{fig:people}). {{cities.n_above.2000|int}} cities are above 2,000 m and {{cities.n_above.3000|int}} above 3,000 m. The highest city of a million or more is {{cities.top_million.0.name|raw}} ({{cities.top_million.0.elev|int}} m); the most populous above 2,000 m are {{cities.biggest_above2000.0.name|raw}}, {{cities.biggest_above2000.1.name|raw}} and {{cities.biggest_above2000.2.name|raw}} (Figure~\ref{fig:cities}). La Paz is the highest capital ({{cities.capitals.0.elev|int}} m), and {{cities.lowest.0.name|raw}} ({{cities.lowest.0.elev|int}} m) the lowest city of 100,000 or more.
+\begin{figure}[tbp]\centering\includegraphics[width=.9\linewidth]{b_people_land.png}\caption{Share of the world's land and of the population of listed cities in each height band.}\label{fig:people}\end{figure}
+\begin{figure}[tbp]\centering\includegraphics[width=.9\linewidth]{b_cities.png}\caption{The highest cities of a million or more (Wikidata heights and populations; Chinese cities by the urban population in Natural Earth).}\label{fig:cities}\end{figure}
+
+\section{The interactive map}
+The page loads the Terrarium tiles directly from Amazon's servers at whatever zoom the reader is viewing (0 to 14), decodes each pixel to a height in the browser and colours it with the same hypsometric palette as the figures. Hill shading uses Horn's gradient with light from the north-west and a vertical exaggeration that rises from 1 at zoom 11 to about 20 to 30 at the world view. Negative heights are drawn as land below sea level only inside Natural Earth's land with a trimmed coastline, and otherwise as sea floor. A reader can switch to shading only or to height steps with drawn class edges, grey out the land below any height (with the share of land and of city people above it), and click anywhere to read the height from a zoom 12 or finer tile. Peaks, cities by height, borders and place names are optional layers.
+
+\section{Limitations}
+The statistics come from a grid of about 10 km, so they understate peaks and narrow valleys, miss most small depressions and say little about countries smaller than about a hundred cells. Coastal cells are floored at sea level, which lowers coastal land slightly and hides coastal depressions. Lakes are removed using Natural Earth outlines, which do not match the tiles' lakes exactly; some lakes in the tiles carry floor depths. The terrain mosaic mixes sources of different ages and accuracies, and the ice surfaces of Antarctica and Greenland are those of their sources. The peak and city data come from Wikidata, whose heights and populations come from many sources and dates; despite the terrain checks some wrong heights will remain, especially low hills whose unit is wrong but whose value still looks plausible. Populations of Chinese prefecture-level cities include large rural areas. Sea level is a reference surface, not the level the sea actually reaches everywhere.
+
+\section{Conclusion}
+Open terrain tiles make it easy to describe the height of the whole planet and to let anyone explore it at any scale. The land is mostly low, with a quarter above 1,000 m and a tenth above 2,000 m, and much of that high land is ice; and people live far lower than the land lies, with fewer than one in fifty city dwellers in this data above 2,000 m.
+
+\section*{Data and code availability}
+The interactive map is at \url{{{meta.page}}}. Data and code are at \url{{{meta.repo}}} and archived with this paper at {{DOILINK}}. Derived data are released under CC BY 4.0 (the table of prominent peaks under CC BY-SA 4.0, following Wikipedia) and code under the MIT licence. The terrain tiles themselves are not redistributed.
+
+\section*{AI statement}
+I wrote the text, with drafting and editing assistance from Claude (Anthropic), which also helped prepare the analysis code. I reviewed and checked all text and results.
+
+\begin{thebibliography}{9}
+\bibitem[Amante and Eakins(2009)]{etopo1} Amante, C. and Eakins, B.W. (2009) ETOPO1 1 arc-minute global relief model: procedures, data sources and analysis. NOAA Technical Memorandum NESDIS NGDC-24. National Geophysical Data Center, NOAA. doi:10.7289/V5C8276M
+\bibitem[AWS(2026)]{terraintiles} Registry of Open Data on AWS (2026) Terrain Tiles. \url{https://registry.opendata.aws/terrain-tiles/}
+\bibitem[Danielson and Gesch(2011)]{gmted} Danielson, J.J. and Gesch, D.B. (2011) Global multi-resolution terrain elevation data 2010 (GMTED2010). U.S. Geological Survey Open-File Report 2011-1073.
+\bibitem[Farr et al.(2007)]{srtm} Farr, T.G. et al. (2007) The Shuttle Radar Topography Mission. \emph{Reviews of Geophysics}, 45, RG2004.
+\bibitem[Mapzen(2017)]{joerd} Mapzen (2017) Joerd: data sources and attribution for the Terrain Tiles. \url{https://github.com/tilezen/joerd/blob/master/docs/attribution.md}
+\bibitem[Natural Earth(2026)]{naturalearth} Natural Earth (2026) 1:10m cultural and physical vectors. Public domain. \url{https://www.naturalearthdata.com/}
+\bibitem[Strahler(1952)]{strahler} Strahler, A.N. (1952) Hypsometric (area-altitude) analysis of erosional topography. \emph{Geological Society of America Bulletin}, 63(11), 1117 to 1142.
+\bibitem[Vrandečić and Krötzsch(2014)]{wikidata} Vrandečić, D. and Krötzsch, M. (2014) Wikidata: a free collaborative knowledgebase. \emph{Communications of the ACM}, 57(10), 78 to 85.
+\bibitem[Wikipedia(2026)]{wpprom} Wikipedia contributors (2026) List of mountain peaks by prominence. English Wikipedia, CC BY-SA 4.0. \url{https://en.wikipedia.org/wiki/List_of_mountain_peaks_by_prominence}
+\end{thebibliography}
+\end{document}
