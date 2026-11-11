@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this data or code, please cite it as below."
+title: "How High Is the World? Height Above Sea Level, Mountains and Where People Live, from Open Terrain Data"
+type: dataset
+authors:
+  - family-names: Hotham
+    given-names: Tristan
+    orcid: "https://orcid.org/0000-0003-4931-9349"
+    affiliation: "Independent researcher"
+doi: "10.5281/zenodo.23848930"
+url: "https://maps.tristanhotham.com/world-terrain/"
+repository-code: "https://github.com/Tristan-Hotham/world-terrain"
+license: CC-BY-4.0
+keywords:
+  - "elevation"
+  - "height above sea level"
+  - "hypsometry"
+  - "topography"
+  - "mountains"
+  - "prominence"
+  - "cities"
+  - "terrain tiles"
+  - "SRTM"
+  - "Wikidata"
+  - "data visualisation"
